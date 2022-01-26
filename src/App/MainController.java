@@ -11,6 +11,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -21,14 +22,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.Scanner;
-import java.util.Vector;
+import java.util.*;
 
 import static java.lang.Integer.max;
 
 public class MainController implements Initializable {
+
+    @FXML
+    private Label lbl_cntCorrect;
+
+    @FXML
+    private Label lbl_cntWrong;
 
     @FXML
     private ScrollPane scrollPane_output;
@@ -43,58 +47,69 @@ public class MainController implements Initializable {
     int ptr;
     int rowPtr;
     KeyCode key;
-    Vector<Vector<Label>> text = null;
-    double procentTextScroll;
-    FileInputStream fin = null;
-    Scanner scan = null;
-    File file = new File("C:\\Users\\Comp\\IdeaProjects\\TextTypingApp\\resources\\books\\test.txt");
+    Vector<Vector<Label>> text = new Vector<>(); //Bad news my app is going down for big files((((
+    double procentTextScroll;                    //i think java cant handle alot Labels need to change
+    Scanner scan = null;                         //output from sizeable to pages <3
+    File file = null;                            //Need stressTest to know how Labels he can handle in 1 stage
     FileChooser fileChooser = null;
     boolean isLocked;
+    int countCorrect;
+    int countWrong;
 
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        parseLine("Hello");
         init();
+        showOutput();
     }
 
     private void init(){
-        try {
-            fin = new FileInputStream(file);
-        }
-        catch (IOException exc){
-            System.out.println("Missing test.txt in folder books");
-        }
         txtarea_input.setEditable(true);
         txtarea_input.setText("");
-        tflow_output.getChildren().clear();
-        text = new Vector<Vector<Label>>();
         ptr = 0;
         rowPtr = 0;
         procentTextScroll = 0.0;
         fileChooser = new FileChooser();
         isLocked = false;
+        countCorrect = 0;
+        countWrong = 0;
+        lbl_cntCorrect.setText("Correct\t = 0");
+        lbl_cntWrong.setText("Wrong\t = 0");
+        text.get(0).get(0).setStyle("-fx-background-color: orange;");
+    }
 
-        scan = new Scanner(fin);
-        int i = 0;
-        while(scan.hasNextLine()){
-            String str = scan.nextLine();
-            Vector<Label> temp = new Vector<>();
-            for(int j = 0; j < str.length(); ++j){
-                Label lbl = new Label(String.valueOf(str.charAt(j)));
-                lbl.setFont(Font.font("Cambria", 20));
-                temp.add(lbl);
+    void parseFile(){
+        try(FileInputStream fin = new FileInputStream(file)) {
+            text = new Vector<Vector<Label>>();
+            scan = new Scanner(fin);
+            while(scan.hasNextLine()){
+                String str = scan.nextLine();
+                parseLine(str);
             }
-            temp.add(new Label("\n"));
-            text.add(temp);
+            text.get(text.size()-1).add(new Label(" "));
         }
-        text.get(text.size()-1).add(new Label(" "));
+        catch (IOException exc){
+            System.out.printf("Something goes wrong with %s.txt\n", file.getName());
+        }
+    }
 
+    private void parseLine(String str){
+        Vector<Label> temp = new Vector<>();
+        for(int j = 0; j < str.length(); ++j){
+            Label lbl = new Label(String.valueOf(str.charAt(j)));
+            lbl.setFont(Font.font("Cambria", 20));
+            temp.add(lbl);
+        }
+        temp.add(new Label("\n"));
+        text.add(temp);
+    }
+
+    private void showOutput(){
         for(var rows : text){
             tflow_output.getChildren().addAll(rows);
             tflow_output.getChildren().add(new Text("\n"));
         }
-
-        text.get(0).get(0).setStyle("-fx-background-color: orange;");
     }
 
     //key pressed
@@ -112,12 +127,18 @@ public class MainController implements Initializable {
                 text.get(rowPtr).get(ptr).setStyle("-fx-background-color: none;");
                 ptr = max(0, --ptr);
             }
-            if (key == KeyCode.ENTER && !txtarea_input.isEditable()) {
-                text.get(rowPtr).get(ptr).setStyle("-fx-background-color: none;");
-                ptr = 0;
-                txtarea_input.setText("");
-                rowPtr++;
-                txtarea_input.setEditable(true);
+            if (key == KeyCode.ENTER || key == KeyCode.TAB) {                                       //lock enter and tab because crashing input
+                if(key == KeyCode.ENTER && !txtarea_input.isEditable()) {                           //Bug with ctrl combo need to lock ctrl
+                    text.get(rowPtr).get(ptr).setStyle("-fx-background-color: none;");
+                    ptr = 0;
+                    txtarea_input.setText("");
+                    rowPtr++;
+                    txtarea_input.setEditable(true);
+                }
+                else {
+                    txtarea_input.setText(txtarea_input.getText().substring(0, ptr));
+                    txtarea_input.positionCaret(ptr);
+                }
             }
 
 
@@ -129,22 +150,27 @@ public class MainController implements Initializable {
     @FXML
     void input(KeyEvent event) {
         if(!isLocked) {
-            if (txtarea_input.isEditable() && (key.isLetterKey() || key.isDigitKey() || key.isArrowKey() || KeyCode.SPACE == key)) {
+            if (txtarea_input.isEditable() && (key.isLetterKey() || key.isDigitKey() || KeyCode.SPACE == key)) {
                 if (ptr < text.get(rowPtr).size() - 1 && isCorrect()) {
                     text.get(rowPtr).get(ptr).setStyle("-fx-text-fill: green;");
-                } else {
+                    countCorrect++;
+                }
+                else {
                     if (text.get(rowPtr).get(ptr).getText().equals(" "))
                         text.get(rowPtr).get(ptr).setStyle("-fx-background-color: red;");
                     else
                         text.get(rowPtr).get(ptr).setStyle("-fx-text-fill: red;");
+                    countWrong++;
                 }
                 ptr = txtarea_input.getCaretPosition();
+                lbl_cntCorrect.setText(String.format("Correct\t= %d", countCorrect)); //Need stuf to decrement when back_space
+                lbl_cntWrong.setText(String.format("Wrong\t= %d", countWrong));
                 System.out.printf("rowPtr = %d, ptr = %d\n", rowPtr, ptr);
-                if (text.get(rowPtr).get(ptr).getText().equals("\n") || ptr > text.get(rowPtr).size() - 1) { // <----- PROBLEMS
+                if (text.get(rowPtr).get(ptr).getText().equals("\n") || ptr > text.get(rowPtr).size() - 1) {
                     txtarea_input.setText(txtarea_input.getText().substring(0, ptr));
                     txtarea_input.setEditable(false);
                     if (rowPtr == text.size() - 1) {
-                        System.out.println("Complete!"); //need func to next list or if it will be sizeable need open window with info about end of text.
+                        System.out.println("Complete!");
                         isLocked = true;
                         callAlert();
                     }
@@ -170,7 +196,6 @@ public class MainController implements Initializable {
     }
 
     private void callAlert(){
-        System.out.println("ALERT");
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("End of file");
         alert.setHeaderText("U just typed all text");
@@ -180,14 +205,33 @@ public class MainController implements Initializable {
 
     @FXML
     void reset(ActionEvent event) {
+        for(var row : text){
+            for(var col : row){
+                col.setStyle("-fx-background-color: none;");
+            }
+        }
         init();
+        txtarea_input.requestFocus();
+        scrollPane_output.setVvalue(0.0d);
+    }
+
+    private void clearOutPut(){
+        tflow_output.getChildren().clear();
     }
 
     @FXML
     void openFile(ActionEvent event) {
         Stage stage = new Stage();
         file = fileChooser.showOpenDialog(stage);
+        clearOutPut();
+        parseFile();
         init();
+        showOutput();
+    }
+
+    @FXML
+    void focusOnInput(MouseEvent event) {
+        txtarea_input.requestFocus();
     }
 
 }
