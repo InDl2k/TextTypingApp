@@ -6,8 +6,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.net.URL;
-
 public class Main extends Application {
     public static void main(String args[]){
         launch();
@@ -15,9 +13,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        URL fileUrl = App.Main.class.getResource("fxml/main.fxml");
-        System.out.println(fileUrl);
-        Parent root = FXMLLoader.load(fileUrl);
+        Parent root = FXMLLoader.load(getClass().getResource("/fxml/Main.fxml"));
         Scene scene = new Scene(root);
 
         stage.setScene(scene);
