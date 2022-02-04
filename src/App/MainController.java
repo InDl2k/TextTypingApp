@@ -9,19 +9,14 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.Scanner;
 import java.util.Vector;
 
 import static java.lang.Integer.max;
@@ -54,32 +49,22 @@ public class MainController implements Initializable {
     int rowPtr;
     KeyCode key;
     Vector<Vector<Label>> text = new Vector<>();
-    double procentTextScroll;
-    Scanner scan = null;
-    File file = null;
-    FileChooser fileChooser = new FileChooser();
     boolean isLocked;
+
+    OutputText outputText;
+
+    //class CountController
     int totalCntCorrect;
     int totalCntWrong;
-
     int curCntCorrect;
     int curCntWrong;
 
-    int sumChars = 0;
-    int sumPages;
-    int showStep;
-    int curPage = 1;
-
-    int firstIndex;
-    int lastIndex;
-
-    final int maxCharsInOnePage = 1000;
-
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        parseLine("Hello\n");
+        Parser.parseLine("Hello\n", text);
+        outputText = new OutputText(tflow_output);
         init();
-        showOutput(firstIndex, lastIndex); //u say what the heck is this, a say i dont know
+        outputText.show(PageController.getFirstIndex(), PageController.getLastIndex(), text);
     }
 
     private void init(){
@@ -88,22 +73,16 @@ public class MainController implements Initializable {
         curCntCorrect = 0;
         curCntWrong = 0;
 
-        sumPages = 0;
-        showStep = 0;
-        curPage = 1;
+        PageController.curPage = 1;
+        PageController.getPages(text);
 
-        getPages();
+        outputText.clear(text);
+        setDefaultSettings();
 
-        txtarea_input.setEditable(true);
-        btn_clear.setDisable(false);
-        txtarea_input.setText("");
-        ptr = 0;
-        rowPtr = firstIndex;
-        procentTextScroll = 0.0;
-        isLocked = false;
-        setLabels();
-        text.get(rowPtr).get(ptr).setStyle("-fx-background-color: orange;");
+        checkEnter();
+    }
 
+    private void checkEnter(){
         if(text.get(rowPtr).get(ptr).getText().equals(" ")) {
             txtarea_input.setEditable(false);
             btn_clear.setDisable(true);
@@ -113,45 +92,7 @@ public class MainController implements Initializable {
     private void setLabels(){
         lbl_cntCorrect.setText(String.format("Correct\t = %d", totalCntCorrect+curCntCorrect));
         lbl_cntWrong.setText(String.format("Wrong\t = %d", totalCntWrong+curCntWrong));
-        lbl_pages.setText(String.format("Pages:\t %d/%d", curPage, sumPages));
-    }
-
-    void parseFile(){
-        try(FileInputStream fin = new FileInputStream(file)) {
-            text = new Vector<Vector<Label>>();
-            scan = new Scanner(fin);
-            while(scan.hasNextLine()){
-                String str = scan.nextLine();
-                parseLine(str);
-            }
-            text.get(text.size()-1).add(new Label(" "));
-        }
-        catch (IOException exc){
-            System.out.printf("Something goes wrong with %s.txt\n", file.getName());
-        }
-    }
-
-    private void parseLine(String str){
-        str = str.strip();
-        sumChars += str.length();
-        Vector<Label> temp = new Vector<>();
-        for(int j = 0; j < str.length(); ++j){
-            Label lbl = new Label(String.valueOf(str.charAt(j)));
-            lbl.setFont(Font.font("Cambria", 20));
-            temp.add(lbl);
-        }
-        Label lbl = new Label(" ");
-        lbl.setStyle("-fx-text-fill: white;");
-        temp.add(lbl);
-        text.add(temp);
-    }
-
-    private void showOutput(int l, int r){
-        for(int i = l; i < r; ++i){
-            tflow_output.getChildren().addAll(text.get(i));
-            tflow_output.getChildren().add(new Text("\n"));
-        }
-        text.get(rowPtr).get(ptr).setStyle("-fx-background-color: orange;");
+        lbl_pages.setText(String.format("Pages:\t %d/%d", PageController.curPage, PageController.sumPages));
     }
 
     //key pressed
@@ -194,12 +135,12 @@ public class MainController implements Initializable {
                     txtarea_input.setEditable(false);
                     btn_clear.setDisable(true);
                 }
-                if(rowPtr >= lastIndex){
+                if(rowPtr >= PageController.getLastIndex()){
                     totalCntCorrect += curCntCorrect;
                     totalCntWrong += curCntWrong;
                     curCntWrong = 0;
                     curCntCorrect = 0;
-                    toNextPage();
+                    nextPage(new ActionEvent());
                 }
             }
             else {
@@ -217,7 +158,7 @@ public class MainController implements Initializable {
         if(!isLocked) {
             if (txtarea_input.isEditable() && key != KeyCode.BACK_SPACE && key != KeyCode.DELETE) {
                 if (ptr < text.get(rowPtr).size() - 1 && key != KeyCode.ENTER && isCorrect()) {                         //SOMEBODY TOUCHA MY SPAGHET
-                    text.get(rowPtr).get(ptr).setStyle("-fx-text-fill: green;");                                        //why I didnt use OOP((((((
+                    text.get(rowPtr).get(ptr).setStyle("-fx-text-fill: green;");                                        
                     lbl_cntCorrect.setText(String.format("Correct\t= %d", totalCntCorrect+(++curCntCorrect)));
                 }
                 else if(key != KeyCode.ENTER) {
@@ -234,9 +175,8 @@ public class MainController implements Initializable {
                     txtarea_input.setEditable(false);
                     btn_clear.setDisable(true);
                     if (rowPtr == text.size() - 1) {
-                        System.out.println("Complete!");
                         isLocked = true;
-                        callAlert();
+                        callEndTypeAlert();
                     }
                 }
             }
@@ -250,16 +190,17 @@ public class MainController implements Initializable {
         return txtarea_input.getText().charAt(ptr) == text.get(rowPtr).get(ptr).getText().charAt(0);
     }
 
+
+    //class AutoScroll
     private void scrollText() {
-        procentTextScroll =  Float.parseFloat(String.format(Locale.US,"%.2f", getProcentTypedOfText()));
+        float procentTextScroll =  Float.parseFloat(String.format(Locale.US,"%.2f", getProcentTypedOfText()));
         scrollPane_output.setVvalue(procentTextScroll * 1.0d);
     }
-
     private float getProcentTypedOfText(){
-        return (rowPtr / (float)text.size());
+        return ((rowPtr - PageController.getFirstIndex()) / ((float)PageController.getLastIndex() - (float)PageController.getFirstIndex()));
     }
 
-    private void callAlert(){
+    private void callEndTypeAlert(){
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("End of file");
         alert.setHeaderText("U just typed all text");
@@ -270,21 +211,20 @@ public class MainController implements Initializable {
     @FXML
     void reset(ActionEvent event) {
         tflow_output.getChildren().clear();
-        curPage = 1;
+        PageController.curPage = 1;
         init();
-        clearOutput();
-        showOutput(firstIndex, lastIndex);
+        outputText.show(PageController.getFirstIndex(), PageController.getLastIndex(), text);
     }
 
     @FXML
     void openFile(ActionEvent event) {
-        sumChars = 0;
+        text.clear();
         Stage stage = new Stage();
-        file = fileChooser.showOpenDialog(stage);
+        File file = new FileChooser().showOpenDialog(stage);
         tflow_output.getChildren().clear();
-        parseFile();
+        Parser.parseFile(file, text);
         init();
-        showOutput(firstIndex, lastIndex);
+        outputText.show(PageController.getFirstIndex(), PageController.getLastIndex(), text);
     }
 
     @FXML
@@ -294,63 +234,49 @@ public class MainController implements Initializable {
 
     @FXML
     void nextPage(ActionEvent event) {
-        clearOutput();
-        toNextPage();
-    }
-
-    private void toNextPage(){
-        if(curPage < sumPages) {
-            lbl_pages.setText(String.format("Pages:\t %d/%d", ++curPage, sumPages));
-            tflow_output.getChildren().clear();
-            getPages();
-            rowPtr = firstIndex;
-            showOutput(firstIndex, lastIndex);
+        if(PageController.curPage < PageController.sumPages) {
+            lbl_pages.setText(String.format("Pages:\t %d/%d", ++PageController.curPage, PageController.sumPages));
+            toPage();
+            checkEnter();
         }
     }
 
     @FXML
     void previousPage(ActionEvent event) {
-        clearOutput();
-        toPreviousPage();
+        if(PageController.curPage > 1) {
+            lbl_pages.setText(String.format("Pages:\t %d/%d", --PageController.curPage, PageController.sumPages));
+            toPage();
+            checkEnter();
+        }
     }
 
-    private void toPreviousPage(){
-        if(curPage > 1){
-            lbl_pages.setText(String.format("Pages:\t %d/%d", --curPage, sumPages));
-            tflow_output.getChildren().clear();
-            getPages();
-            rowPtr = firstIndex;
-            showOutput(firstIndex, lastIndex);
-        }
+    private void toPage(){
+        clearPage(new ActionEvent());
+        tflow_output.getChildren().clear();
+        rowPtr = PageController.getFirstIndex();
+        outputText.show(PageController.getFirstIndex(), PageController.getLastIndex(), text);
+        text.get(rowPtr).get(ptr).setStyle("-fx-background-color: orange;");
     }
 
     @FXML
     void clearPage(ActionEvent event) {
-        clearOutput();
-        setLabels();
+        outputText.clear(text);
+        setDefaultSettings();
     }
 
-    private void clearOutput(){
-        for(var row : text){
-            for(var col : row){
-                col.setStyle("-fx-background-color: none;");
-            }
-        }
+    private void setDefaultSettings(){
+        txtarea_input.setEditable(true);
+        btn_clear.setDisable(false);
+        isLocked = false;
         curCntWrong = 0;
         curCntCorrect = 0;
         ptr = 0;
-        rowPtr = firstIndex;
+        rowPtr = PageController.getFirstIndex();
         txtarea_input.setText("");
         txtarea_input.requestFocus();
         scrollPane_output.setVvalue(0.0d);
+        setLabels();
         text.get(rowPtr).get(ptr).setStyle("-fx-background-color: orange;");
-    }
-
-    private void getPages(){
-        sumPages = (sumChars / maxCharsInOnePage == 0) ? 1 : sumChars / maxCharsInOnePage;
-        showStep = text.size() / sumPages;
-        firstIndex = curPage * showStep - showStep;
-        lastIndex = showStep * curPage;
     }
 
 }
