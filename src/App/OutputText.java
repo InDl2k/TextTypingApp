@@ -8,11 +8,12 @@ import javafx.scene.text.TextFlow;
 import java.util.Vector;
 
 public class OutputText extends TextFlow {
-    TextFlow tflow_output;
+    private TextFlow tflow_output;
+    private PageController pageController;
 
-    OutputText(TextFlow textFlow){
+    OutputText(TextFlow textFlow, PageController pageController){
         this.tflow_output = textFlow;
-        System.out.println(tflow_output);
+        this.pageController = pageController;
     }
 
     public void show(int l, int r, Vector<Vector<Label>> text){
@@ -23,7 +24,7 @@ public class OutputText extends TextFlow {
     }
 
     public void clear(Vector<Vector<Label>> text){
-        for(int i = PageController.getFirstIndex(); i < PageController.getLastIndex(); ++i){
+        for(int i = pageController.getFirstIndex(); i < pageController.getLastIndex(); ++i){
             for(var col : text.get(i)){
                 col.setStyle("-fx-background-color: none;");
             }
