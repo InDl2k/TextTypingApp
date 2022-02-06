@@ -5,10 +5,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -22,6 +19,9 @@ import java.util.ResourceBundle;
 import java.util.Vector;
 
 public class MainController implements Initializable {
+
+    @FXML
+    private Button btn_reset;
 
     @FXML
     private Label lbl_cntCorrect;
@@ -54,18 +54,20 @@ public class MainController implements Initializable {
     CountController countController;
     PageController pageController;
     InputText inputText;
+    File file = null;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        pageController = new PageController();
+        btn_reset.setDisable(true);
         Parser.parseLine("Hello\n", text);
         init();
-        outputText.show(pageController.getFirstIndex(), pageController.getLastIndex(), text);
+        outputText.show(text);
     }
 
     private void init(){
-        pageController = new PageController(text);                  //look at this OOP <3
+        outputScroll = new ScrollController(scrollPane_output);
         outputText = new OutputText(tflow_output, pageController);
-        outputScroll = new ScrollController(scrollPane_output, pageController);
         countController = new CountController();
         pointer = new Pointer();
         inputText = new InputText(txtarea_input, pointer, countController, text);
@@ -94,7 +96,7 @@ public class MainController implements Initializable {
     @FXML
     private void getKey(KeyEvent event) {
         if(!isLocked) {
-            key = event.getCode();                      //Now thats looks cleaner)))
+            key = event.getCode();
             inputText.keyPressed(key);
             setLabels();
 
@@ -120,7 +122,7 @@ public class MainController implements Initializable {
             }
 
             text.get(pointer.getX()).get(pointer.getY()).setStyle("-fx-background-color: orange;");
-            outputScroll.scrollText(pointer.getX());
+            outputScroll.scrollText(pointer.getX(), text.size());
         }
     }
 
@@ -135,19 +137,25 @@ public class MainController implements Initializable {
     @FXML
     private void reset(ActionEvent event) {
         tflow_output.getChildren().clear();
+        pageController.setCurPage(1);
+        Parser.parseFile(file,pageController.getFirstIndex(), pageController.getLastIndex(), text);
         init();
-        outputText.show(pageController.getFirstIndex(), pageController.getLastIndex(), text);
+        outputText.show(text);
     }
 
     @FXML
     private void openFile(ActionEvent event) {
         text.clear();
-        Stage stage = new Stage();
-        File file = new FileChooser().showOpenDialog(stage);
         tflow_output.getChildren().clear();
-        Parser.parseFile(file, text);
+
+        Stage stage = new Stage();
+        file = new FileChooser().showOpenDialog(stage);
+        pageController = new PageController(file);
+        btn_reset.setDisable(false);
+
+        Parser.parseFile(file,pageController.getFirstIndex(), pageController.getLastIndex(), text);
         init();
-        outputText.show(pageController.getFirstIndex(), pageController.getLastIndex(), text);
+        outputText.show(text);
     }
 
     @FXML
@@ -176,11 +184,10 @@ public class MainController implements Initializable {
     }
 
     private void toPage(){
-        clearPage(new ActionEvent());
+        Parser.parseFile(file, pageController.getFirstIndex(), pageController.getLastIndex(), text);
         tflow_output.getChildren().clear();
-        pointer.setX(pageController.getFirstIndex());
-        outputText.show(pageController.getFirstIndex(), pageController.getLastIndex(), text);
-        text.get(pointer.getX()).get(pointer.getY()).setStyle("-fx-background-color: orange;");
+        setDefaultSettings();
+        outputText.show(text);
     }
 
     @FXML
@@ -194,7 +201,7 @@ public class MainController implements Initializable {
         isLocked = false;
         countController.resetCur();
         pointer.setY(0);
-        pointer.setX(pageController.getFirstIndex());
+        pointer.setX(0);
         txtarea_input.setText("");
         txtarea_input.requestFocus();
         scrollPane_output.setVvalue(0.0d);

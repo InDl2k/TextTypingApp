@@ -11,10 +11,13 @@ import java.util.Vector;
 
 public class Parser {
 
-    public static void parseFile(File file, Vector<Vector<Label>> text){
+    public static void parseFile(File file, int l, int r, Vector<Vector<Label>> text){
+        text.clear();
         try(FileInputStream fin = new FileInputStream(file)) {
             Scanner scan = new Scanner(fin);
-            while(scan.hasNextLine()){
+            for(int i = 0; i < l; ++i)
+                scan.nextLine();
+            for(int i = l; i < r; ++i) {
                 String str = scan.nextLine();
                 parseLine(str, text);
             }
@@ -27,7 +30,6 @@ public class Parser {
 
     public static void parseLine(String str, Vector<Vector<Label>> text){
         str = str.strip();
-        //sumChars += str.length();
         Vector<Label> temp = new Vector<>();
         for(int j = 0; j < str.length(); ++j){
             Label lbl = new Label(String.valueOf(str.charAt(j)));
@@ -39,4 +41,35 @@ public class Parser {
         temp.add(lbl);
         text.add(temp);
     }
+
+    public static int getCountChars(File file){
+        int sumChars = 0;
+        try(FileInputStream fin = new FileInputStream(file)) {
+            Scanner scan = new Scanner(fin);
+            while(scan.hasNextLine()){
+                sumChars += scan.nextLine().length();
+            }
+        }
+        catch (IOException exc){
+            System.out.printf("Something goes wrong with %s.txt\n", file.getName());
+        }
+        return sumChars;
+    }
+
+    public static int getCountLines(File file){
+        int len = 0;
+        try(FileInputStream fin = new FileInputStream(file)) {
+            Scanner scan = new Scanner(fin);
+            while(scan.hasNextLine()){
+                scan.nextLine();
+                len++;
+            }
+        }
+        catch (IOException exc){
+            System.out.printf("Something goes wrong with %s.txt\n", file.getName());
+        }
+        return len;
+    }
+
+    //add parsing from l to r thats would be hard need to get better with RAM memory
 }

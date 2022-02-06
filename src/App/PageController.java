@@ -1,8 +1,6 @@
 package App;
 
-import javafx.scene.control.Label;
-
-import java.util.Vector;
+import java.io.File;
 
 public class PageController {
 
@@ -13,11 +11,18 @@ public class PageController {
     private int showStep;
     private int sumChars;
 
-    PageController(Vector<Vector<Label>> text){
+    PageController(File file){
         curPage = 1;
-        sumChars = getSumChars(text);
+        sumChars = Parser.getCountChars(file);
         sumPages = calcSumPages();
-        showStep = calcStep(text);
+        showStep = calcStep(file);
+    }
+
+    PageController(){
+        curPage = 1;
+        sumChars = 0;
+        sumPages = 1;
+        showStep = 0;
     }
 
     public void plusCurPage(){
@@ -26,6 +31,10 @@ public class PageController {
 
     public void minusCurPage(){
         curPage--;
+    }
+
+    public void setCurPage(int curPage) {
+        this.curPage = curPage;
     }
 
     public int getCurPage() {
@@ -48,16 +57,8 @@ public class PageController {
         return (sumChars / maxCharsInOnePage == 0) ? 1 : sumChars / maxCharsInOnePage;
     }
 
-    private int calcStep(Vector<Vector<Label>> text){
-        return text.size() / sumPages;
-    }
-
-    private int getSumChars(Vector<Vector<Label>> text){
-        int res = 0;
-        for(int i = 0; i < text.size(); ++i){
-            res += text.get(i).size();
-        }
-        return res;
+    private int calcStep(File file){
+        return Parser.getCountLines(file) / sumPages;
     }
 
 
