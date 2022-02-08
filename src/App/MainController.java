@@ -1,11 +1,16 @@
 package App;
 
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -16,9 +21,23 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.Vector;
 
 public class MainController implements Initializable {
+
+    @FXML
+    private Label lbl_accuracy;
+
+    @FXML
+    private Label lbl_WPM;
+
+    @FXML
+    private Button btn_pause;
+
+    @FXML
+    private Label lbl_timer;
 
     @FXML
     private Button btn_reset;
@@ -55,9 +74,25 @@ public class MainController implements Initializable {
     PageController pageController;
     InputText inputText;
     File file = null;
+    WpmController wpmController;
+
+    TimerController timerController;
+    Timer timer = new Timer(true);
+    TimerTask updateTime = new TimerTask() {
+        @Override
+        public void run() {
+            if(timerController.getActive()) {
+                timerController.incrementTime();
+                Platform.runLater(() -> setLabels());
+            }
+        }
+    };
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        timerController = new TimerController();
+        timer.schedule(updateTime, 0, 1000);
+
         pageController = new PageController();
         btn_reset.setDisable(true);
         Parser.parseLine("Hello\n", text);
@@ -66,11 +101,15 @@ public class MainController implements Initializable {
     }
 
     private void init(){
+        timerController.reset();
+        timerController.setTimerActive(true);
+
         outputScroll = new ScrollController(scrollPane_output);
         outputText = new OutputText(tflow_output, pageController);
         countController = new CountController();
         pointer = new Pointer();
         inputText = new InputText(txtarea_input, pointer, countController, text);
+        wpmController = new WpmController(countController, timerController, lbl_WPM);
 
         countController.resetAll();
         outputText.clear(text);
@@ -90,7 +129,11 @@ public class MainController implements Initializable {
         lbl_cntCorrect.setText(String.format("Correct\t = %d", countController.getTotalCntCorrect()));
         lbl_cntWrong.setText(String.format("Wrong\t = %d", countController.getTotalCntWrong()));
         lbl_pages.setText(String.format("Pages:\t %d/%d", pageController.getCurPage(), pageController.getSumPages()));
+        lbl_timer.setText(String.format("Timer:\t %02d:%02d:%02d", timerController.getHours(), timerController.getMinutes(), timerController.getSeconds()));
+        lbl_WPM.setText(String.format("WPM =\t %d", wpmController.getWpm())); wpmController.setColor(wpmController.getWpm());
+        lbl_accuracy.setText(String.format("Accuracy:\t %.2f", wpmController.getAccuracy() * 100) + "%");
     }
+
 
     //key pressed
     @FXML
@@ -116,14 +159,19 @@ public class MainController implements Initializable {
             inputText.keyTyped(key);
             setLabels();
 
-            if (pointer.getX() == text.size() - 1 && pointer.getY() == text.get(text.size() - 1).size() - 1) {
-                isLocked = true;
+            if (isEndOfText()) {
+                pauseTimer(new ActionEvent());
+                btn_pause.setDisable(true);
                 callEndTypeAlert();
             }
 
             text.get(pointer.getX()).get(pointer.getY()).setStyle("-fx-background-color: orange;");
             outputScroll.scrollText(pointer.getX(), text.size());
         }
+    }
+
+    private boolean isEndOfText(){
+        return pointer.getX() == text.size() - 1 && pointer.getY() == text.get(text.size() - 1).size() - 1 && pageController.getCurPage() == pageController.getSumPages();
     }
 
     private void callEndTypeAlert(){
@@ -136,6 +184,8 @@ public class MainController implements Initializable {
 
     @FXML
     private void reset(ActionEvent event) {
+        timerController.reset();
+
         tflow_output.getChildren().clear();
         pageController.setCurPage(1);
         Parser.parseFile(file,pageController.getFirstIndex(), pageController.getLastIndex(), text);
@@ -145,6 +195,8 @@ public class MainController implements Initializable {
 
     @FXML
     private void openFile(ActionEvent event) {
+        timerController.setTimerActive(false);
+
         text.clear();
         tflow_output.getChildren().clear();
 
@@ -196,9 +248,17 @@ public class MainController implements Initializable {
         setDefaultSettings();
     }
 
+    @FXML
+    void pauseTimer(ActionEvent event) {
+        isLocked = !isLocked;
+        timerController.setTimerActive(!timerController.getActive());
+    }
+
     private void setDefaultSettings(){
+        btn_pause.setDisable(false);
         txtarea_input.setEditable(true);
         isLocked = false;
+        timerController.setTimerActive(true);
         countController.resetCur();
         pointer.setY(0);
         pointer.setX(0);

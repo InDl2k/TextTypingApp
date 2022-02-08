@@ -16,7 +16,6 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         URL fileUrl = App.Main.class.getResource("fxml/main.fxml");
-        System.out.println(fileUrl);
         Parent root = FXMLLoader.load(fileUrl);
         Scene scene = new Scene(root);
 

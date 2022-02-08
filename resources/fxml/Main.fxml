@@ -15,7 +15,7 @@
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#focusOnInput" prefHeight="671.0" prefWidth="912.0" style="-fx-background-color: #FFFFEE;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="App.MainController">
    <children>
       <TextArea fx:id="txtarea_input" layoutX="865.0" layoutY="626.0" onKeyPressed="#getKey" onKeyTyped="#input" opacity="0.0" prefHeight="37.0" prefWidth="1.0" />
-      <Button fx:id="btn_reset" layoutX="630.0" layoutY="123.0" mnemonicParsing="false" onAction="#reset" text="Reset" />
+      <Button fx:id="btn_reset" layoutX="630.0" layoutY="168.0" mnemonicParsing="false" onAction="#reset" text="Reset" />
       <ScrollPane fx:id="scrollPane_output" hbarPolicy="NEVER" layoutX="24.0" layoutY="33.0" prefHeight="582.0" prefWidth="600.0">
          <content>
             <TextFlow fx:id="tflow_output" onMouseClicked="#focusOnInput" prefHeight="580.0" prefWidth="598.0" style="-fx-background-color: #FFFFFF;" textAlignment="JUSTIFY">
@@ -57,5 +57,21 @@
          </font>
       </Label>
       <Button fx:id="btn_clear" layoutX="303.0" layoutY="620.0" mnemonicParsing="false" onAction="#clearPage" text="Clear" />
+      <Label fx:id="lbl_timer" layoutX="630.0" layoutY="123.0" prefHeight="45.0" prefWidth="282.0" text="Timer: 00:00:00">
+         <font>
+            <Font size="30.0" />
+         </font>
+      </Label>
+      <Button fx:id="btn_pause" layoutX="682.0" layoutY="168.0" mnemonicParsing="false" onAction="#pauseTimer" text="Pause" />
+      <Label fx:id="lbl_WPM" layoutX="630.0" layoutY="213.0" prefHeight="45.0" prefWidth="282.0" text="WPM = " textFill="#23c6b6">
+         <font>
+            <Font size="30.0" />
+         </font>
+      </Label>
+      <Label fx:id="lbl_accuracy" layoutX="630.0" layoutY="258.0" prefHeight="45.0" prefWidth="282.0" text="Accuracy: " textFill="#23c6b6">
+         <font>
+            <Font size="30.0" />
+         </font>
+      </Label>
    </children>
 </AnchorPane>
