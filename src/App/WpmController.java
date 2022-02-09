@@ -6,9 +6,9 @@ import static java.lang.Integer.max;
 
 public class WpmController {
 
-    Label lbl_wpm;
-    CountController countController;
-    TimerController timerController;
+    private Label lbl_wpm;
+    private CountController countController;
+    private TimerController timerController;
 
     WpmController(CountController countController, TimerController timerController, Label lbl_wpm){
         this.countController = countController;

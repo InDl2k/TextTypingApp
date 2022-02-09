@@ -8,6 +8,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.TextFlow?>
@@ -51,7 +52,7 @@
       </Label>
       <Button fx:id="btn_previousPage" layoutX="253.0" layoutY="620.0" mnemonicParsing="false" onAction="#previousPage" text="&lt;----" />
       <Button fx:id="btn_nextPage" layoutX="352.0" layoutY="620.0" mnemonicParsing="false" onAction="#nextPage" text="----&gt;" />
-      <Label fx:id="lbl_pages" layoutX="630.0" layoutY="615.0" prefHeight="45.0" prefWidth="282.0" text="Pages: 1/100">
+      <Label fx:id="lbl_pages" layoutX="630.0" layoutY="593.0" prefHeight="45.0" prefWidth="282.0" text="Pages: 1/100">
          <font>
             <Font size="30.0" />
          </font>
@@ -71,6 +72,13 @@
       <Label fx:id="lbl_accuracy" layoutX="630.0" layoutY="258.0" prefHeight="45.0" prefWidth="282.0" text="Accuracy: " textFill="#23c6b6">
          <font>
             <Font size="30.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtfield_pagePicker" layoutX="631.0" layoutY="568.0" prefHeight="25.0" prefWidth="82.0" promptText="Set page" />
+      <Button fx:id="btn_goToPage" layoutX="719.0" layoutY="568.0" mnemonicParsing="false" onAction="#changePage" text="Go" />
+      <Label fx:id="lbl_statusPause" layoutX="751.0" layoutY="166.0" text="Paused" textFill="RED">
+         <font>
+            <Font size="20.0" />
          </font>
       </Label>
    </children>

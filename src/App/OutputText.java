@@ -9,11 +9,9 @@ import java.util.Vector;
 
 public class OutputText extends TextFlow {
     private TextFlow tflow_output;
-    private PageController pageController;
 
-    OutputText(TextFlow textFlow, PageController pageController){
+    OutputText(TextFlow textFlow){
         this.tflow_output = textFlow;
-        this.pageController = pageController;
     }
 
     public void show(Vector<Vector<Label>> text){

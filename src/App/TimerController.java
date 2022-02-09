@@ -1,16 +1,16 @@
 package App;
 
 public class TimerController{
-    int hh;
-    int mm;
-    int ss;
-    boolean isTimerActive;
+    private int hh;
+    private int mm;
+    private int ss;
+    private boolean isTimerActive;
 
     TimerController(){
         hh = 0;
         mm = 0;
         ss = 0;
-        isTimerActive = true;
+        isTimerActive = false;
     }
 
     public void incrementTime(){

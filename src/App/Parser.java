@@ -3,9 +3,7 @@ package App;
 import javafx.scene.control.Label;
 import javafx.scene.text.Font;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -13,7 +11,7 @@ public class Parser {
 
     public static void parseFile(File file, int l, int r, Vector<Vector<Label>> text){
         text.clear();
-        try(FileInputStream fin = new FileInputStream(file)) {
+        try(BufferedReader fin = new BufferedReader(new FileReader(file))) {
             Scanner scan = new Scanner(fin);
             for(int i = 0; i < l; ++i)
                 scan.nextLine();
@@ -44,7 +42,7 @@ public class Parser {
 
     public static int getCountChars(File file){
         int sumChars = 0;
-        try(FileInputStream fin = new FileInputStream(file)) {
+        try(BufferedReader fin = new BufferedReader(new FileReader(file))) {
             Scanner scan = new Scanner(fin);
             while(scan.hasNextLine()){
                 sumChars += scan.nextLine().length();
@@ -58,7 +56,7 @@ public class Parser {
 
     public static int getCountLines(File file){
         int len = 0;
-        try(FileInputStream fin = new FileInputStream(file)) {
+        try(BufferedReader fin = new BufferedReader(new FileReader(file))) {
             Scanner scan = new Scanner(fin);
             while(scan.hasNextLine()){
                 scan.nextLine();
@@ -71,5 +69,4 @@ public class Parser {
         return len;
     }
 
-    //add parsing from l to r thats would be hard need to get better with RAM memory
 }

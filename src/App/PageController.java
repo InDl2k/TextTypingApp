@@ -1,7 +1,5 @@
 package App;
 
-import java.io.File;
-
 public class PageController {
 
     final public int maxCharsInOnePage = 1000; //config for optimization
@@ -11,11 +9,11 @@ public class PageController {
     private int showStep;
     private int sumChars;
 
-    PageController(File file){
+    PageController(MyFile file){
         curPage = 1;
-        sumChars = Parser.getCountChars(file);
-        sumPages = calcSumPages();
+        sumChars = file.getSumChars();
         showStep = calcStep(file);
+        sumPages = calcSumPages(file);
     }
 
     PageController(){
@@ -53,12 +51,12 @@ public class PageController {
         return showStep * curPage;
     }
 
-    private int calcSumPages(){
-        return (sumChars / maxCharsInOnePage == 0) ? 1 : sumChars / maxCharsInOnePage;
+    private int calcSumPages(MyFile file){
+        return file.getSumLines() / showStep;
     }
 
-    private int calcStep(File file){
-        return Parser.getCountLines(file) / sumPages;
+    private int calcStep(MyFile file){
+        return file.getSumLines() / ((sumChars / maxCharsInOnePage == 0) ? 1 : (sumChars / maxCharsInOnePage));
     }
 
 
